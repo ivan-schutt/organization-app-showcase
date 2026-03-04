@@ -1,4 +1,4 @@
-# Organization App — Productivity Suite
+# Organization App
 
 I love modular and easy options for calendar activities, and I constantly use a Pomodoro timer to track sessions. I wanted to be able to automatically set intervals and easily build my weekly schedule calculated by sessions. This would let me create a strategy based on time usage and, in the future, make modifications based on statistics. That was the main idea of this application: to easily set up time dedicated to an activity, and then easily schedule my days using blocks based on that time and my usual focus sessions.
 
