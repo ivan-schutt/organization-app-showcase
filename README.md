@@ -1,5 +1,7 @@
 # Organization App
 
+> This is a public showcase of a private repository. Here you'll find architecture details, optimization case studies, and demos of the application. 
+
 I love modular and easy options for calendar activities, and I constantly use a Pomodoro timer to track sessions. I wanted to be able to automatically set intervals and easily build my weekly schedule calculated by sessions. This would let me create a strategy based on time usage and, in the future, make modifications based on statistics. That was the main idea of this application: to easily set up time dedicated to an activity, and then easily schedule my days using blocks based on that time and my usual focus sessions.
 
 The main idea on this is that the blocks available on the calendar to drag and drop are based on the activities set up on the application, dividing time bt sessions and including the time + breaks. This way you have a real-time view that includes resting time.
@@ -8,7 +10,7 @@ The application is a productivity suite built with **Next.js 16**, **TypeScript*
 
 I am currently focusing on the functionality and optimization of the application. After this I will focus on art, styling and user experience.
 
-> This is a public showcase of a private repository. Here you'll find architecture details, optimization case studies, and demos of the application. 
+
 
 ---
 ## Demo
