@@ -1,18 +1,27 @@
 # Organization App — Productivity Suite
 
-A full-featured productivity application built with **Next.js 16**, **TypeScript**, **Tailwind CSS 4**, and **Supabase**. It combines task/project management, an interactive calendar with intelligent drag-and-drop, a Pomodoro timer with analytics, an AI-powered chatbot, and integrations with Notion and Google Calendar.
+I love modular and easy options for calendar activities, and I constantly use a Pomodoro timer to track sessions. I wanted to be able to automatically set intervals and easily build my weekly schedule calculated by sessions. This would let me create a strategy based on time usage and, in the future, make modifications based on statistics. That was the main idea of this application: to easily set up time dedicated to an activity, and then easily schedule my days using blocks based on that time and my usual focus sessions.
 
-> This is a public showcase of a private repository. Here you'll find architecture details, optimization case studies, and demos of the application.
+The main idea on this is that the blocks available on the calendar to drag and drop are based on the activities set up on the application, dividing time bt sessions and including the time + breaks. This way you have a real-time view that includes resting time.
+
+The application is a productivity suite built with **Next.js 16**, **TypeScript**, **Tailwind CSS 4**, and **Supabase**. It combines task/project management, an interactive calendar with intelligent drag-and-drop, a Pomodoro timer with analytics, an AI-powered chatbot, and integrations with Notion and Google Calendar.
+
+I am currently focusing on the functionality and optimization of the application. After this I will focus on art, styling and user experience.
+
+> This is a public showcase of a private repository. Here you'll find architecture details, optimization case studies, and demos of the application. 
 
 ---
-
 ## Demo
 
-<!-- Add screenshots and videos here -->
-<!-- ![Dashboard](./images/dashboard.png) -->
-<!-- ![Calendar](./images/calendar.png) -->
+![Chatbot](./images/Page%201.png)
+![Activities](./images/Page%202.png)
+![Projects](./images/Page%203.png)
+![Categories](./images/Page%204.png)
+![Calendar](./images/Page%205.png)
+![Pomodoro](./images/Page%206.png)
+![Statistics](./images/Page%207.png)
 
-*Screenshots and video demos coming soon — place them in the `images/` folder.*
+
 
 ---
 
@@ -69,26 +78,6 @@ A full-featured productivity application built with **Next.js 16**, **TypeScript
 | **Testing** | Vitest |
 
 ---
-
-## Architecture
-
-### 4-Tier Layered Design
-
-```
-┌──────────────────────────────────────────────────────┐
-│  UI Layer              app/ pages + components/      │
-│  Presentation logic, React components                │
-├──────────────────────────────────────────────────────┤
-│  State / Cache Layer   hooks/ (SWR) + providers/     │
-│  Caching, deduplication, revalidation, auth context  │
-├──────────────────────────────────────────────────────┤
-│  Business Layer        services/ + lib/              │
-│  CRUD operations, domain logic, pure utilities       │
-├──────────────────────────────────────────────────────┤
-│  Data Layer            Supabase (PostgreSQL)         │
-│  Direct database access, RLS policies                │
-└──────────────────────────────────────────────────────┘
-```
 
 Each layer has a single responsibility. Components never call Supabase directly — they go through hooks, which go through services.
 
@@ -217,89 +206,6 @@ export const globalDateCache = new DateParseCache(500);
 
 ---
 
-### Case Study 2: SWR Caching Strategy — Shared Cache Across Components
-
-**The Problem**
-
-Multiple components needed the same data (activities, projects, categories, settings). Each component was independently fetching with `useEffect` + `useState`, leading to:
-- Duplicate API calls on page load
-- Manual loading/error state management
-- No cache sharing between components
-- Stale data after mutations
-
-**The Solution: Standardized SWR Hooks**
-
-All data access was refactored into SWR hooks following a consistent pattern:
-
-```typescript
-const CACHE_KEY = 'activities';
-
-export function useActivities(config?: SWRConfiguration) {
-    const { data, error, isLoading, mutate } = useSWR(
-        CACHE_KEY,
-        () => activitiesService.getActivities(),
-        {
-            refreshInterval: 5 * 60 * 1000,     // Auto-refresh every 5 min
-            revalidateOnFocus: true,              // Refresh on tab focus
-            revalidateOnReconnect: true,          // Refresh on reconnect
-            dedupingInterval: 2000,               // Dedup within 2s window
-            keepPreviousData: true,               // Show stale data while fetching
-            ...config,
-        }
-    );
-
-    const createActivity = async (input) => {
-        const result = await activitiesService.create(input);
-        if (result) await mutate(); // Refresh cache after mutation
-        return result;
-    };
-
-    return { activities: data || [], isLoading, error, createActivity, ... };
-}
-```
-
-This same pattern is replicated for `useProjects`, `useCategories`, `useSettings`, and `useChat`.
-
-**How the cache lifecycle works:**
-
-```
-1. First request        → API call (~150ms), result cached
-2. Same request < 2s    → Return cached data instantly (~2ms), no API call
-3. Different component   → Same cache key = shared data, no duplicate request
-4. After mutation       → mutate() refreshes cache, all consumers update
-5. After 5 minutes      → Auto-refresh if any consumer is mounted
-6. Tab regains focus    → Revalidate against server
-```
-
-**Global SWR configuration** (applied via provider):
-
-```typescript
-const swrConfig: SWRConfiguration = {
-    refreshInterval: 5 * 60 * 1000,
-    revalidateOnFocus: true,
-    revalidateOnReconnect: true,
-    dedupingInterval: 2000,
-    shouldRetryOnError: true,
-    errorRetryCount: 3,
-    onErrorRetry: (error, key, config, revalidate, { retryCount }) => {
-        if (retryCount >= 3) return;
-        setTimeout(() => revalidate({ retryCount }),
-            Math.min(1000 * Math.pow(2, retryCount), 10000)); // Exponential backoff
-    },
-    keepPreviousData: true,
-};
-```
-
-**Results:**
-- ~50% fewer network requests in a typical session
-- Consistent loading/error states across all data types
-- Automatic cache invalidation after mutations
-- Zero boilerplate for new data sources (just follow the pattern)
-
-> Full documentation: [docs/swr-caching.md](./docs/swr-caching.md)
-
----
-
 ## Other Architectural Decisions
 
 ### Type Centralization
@@ -335,59 +241,4 @@ Uses **Vitest** with focused unit tests on pure logic:
 - **Memoization tests** — LRU eviction, cache hits, format normalization
 - **Block generator tests** — activity-to-block splitting, edge cases, configurable durations
 
-```bash
-npm test          # Run all tests
-npm run test:watch # Watch mode
-```
 
----
-
-## Setup
-
-### Prerequisites
-- Node.js 18+
-- Supabase account
-- Groq API key (optional, for chatbot)
-- Google OAuth credentials (optional, for Calendar sync)
-- Notion API token (optional)
-
-### Installation
-
-```bash
-npm install
-npm run dev       # http://localhost:3000
-```
-
-### Environment Variables (`.env.local`)
-
-```env
-# Required
-NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
-NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key
-
-# Optional
-GROQ_API_KEY=gsk_...
-GROQ_MODEL=llama-3.3-70b-versatile
-NEXT_PUBLIC_GOOGLE_CLIENT_ID=...
-NEXT_PUBLIC_GOOGLE_API_KEY=...
-NOTION_TOKEN=secret_...
-NOTION_DATABASE_ID=...
-```
-
----
-
-## Database
-
-9 tables with Row Level Security (RLS) for user isolation:
-
-| Table | Purpose |
-|-------|---------|
-| `activities` | Tasks with hours, time scope, project assignment |
-| `projects` | Project grouping with category and status |
-| `categories` | Color-coded project tags |
-| `calendar_events` | Calendar entries (local + Google) |
-| `pomodoro_state` | Current timer state |
-| `pomodoro_sessions` | Completed work sessions |
-| `chat_conversations` | Chat threads |
-| `chat_messages` | Messages with tool call results (JSONB) |
-| `user_settings` | User preferences |
