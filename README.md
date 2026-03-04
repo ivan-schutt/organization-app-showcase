@@ -17,6 +17,8 @@ I am currently focusing on the functionality and optimization of the application
 
 ![Demo](./images/Gif%201.gif)
 
+![Demo 2](./images/Gif%202.gif)
+
 ![Chatbot](./images/Page%201.png)
 ![Activities](./images/Page%202.png)
 ![Projects](./images/Page%203.png)
